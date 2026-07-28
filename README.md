@@ -41,6 +41,7 @@ Next steps
 Currently, the automation tracks only the Lucid Air. The next step is to add support for the Lucid Gravity while maintaining a separate dataset and dashboard. Since the two models target different segments of the market, combining their dashboards could obscure trends that are vehicle specific. 
 
 Tech Stack
+
 -n8n
 
 -Google Sheets
