@@ -14,15 +14,14 @@ Dashboard: Using the historical dataset, the dashboard calculates statistics tha
 The automation runs everyday at 6am, and sends me a email to tell me it has ran along with key summary statistics. 
 
 Key Metrics Tracked
-
-Total in Inventory
-New Vehicles
-Disappeared/Sold Vehicles
-Sold Last 7 days, Month, 90 days, Year
-New Inventory Last 7 days, Month, 90 days, Year
-Average and Median Price
-Average time to sell
-Inventory and Sales Week on Week and Month on Month Growth %
+-Total in Inventory
+-New Vehicles
+-Disappeared/Sold Vehicles
+-Sold Last 7 days, Month, 90 days, Year
+-New Inventory Last 7 days, Month, 90 days, Year
+-Average and Median Price
+-Average time to sell
+-Inventory and Sales Week on Week and Month on Month Growth %
 
 Limitations
 
