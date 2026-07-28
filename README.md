@@ -1,6 +1,4 @@
 # lucid-inventory-tracker
-n8n workflow for tracking Lucid Air inventory and historical metrics
-
 Overview 
 
 This automation tracks Lucid Air inventory from an investor’s perspective by collecting inventory data directly from Lucid’s website and monitoring how it changes over time. 
