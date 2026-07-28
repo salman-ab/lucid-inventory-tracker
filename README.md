@@ -5,13 +5,13 @@ This automation tracks Lucid Air inventory from an investor’s perspective by c
 
 How it works
 
-The automation uses Lucid’s inventory API to retrieve current vehicle listings. Each time the workflow runs, it performs three mains tasks. 
+The automation uses Lucid’s inventory API to retrieve current vehicle listings. Each time the workflow runs, it performs three main tasks. 
 
-Append History: Every Lucid Air in the current inventory is appended into the historical dataset, creating time stamp snapshots of inventory. As the automation runs daily at 6am, this build a historical record that can be used to analyze sales and inventory data. 
-Current Inventory: The current inventory sheet is cleared and repopulated everyday so it always reflects the latest inventory. 
-Dashboard: Using the historical dataset, the dashboard calculates statistics that can help investors better understand inventory demand, supply, and pricing. 
+1. Append History: Every Lucid Air in the current inventory is appended into the historical dataset, creating timestamped snapshots of inventory. As the automation runs daily at 6am, this builds a historical record that can be used to analyze sales and inventory data. 
+2. Current Inventory: The current inventory sheet is cleared and repopulated everyday so it always reflects the latest inventory. 
+3. Dashboard: Using the historical dataset, the dashboard calculates statistics that can help investors better understand inventory demand, supply, and pricing. 
 
-The automation runs everyday at 6am, and sends me a email to tell me it has ran along with key summary statistics. 
+The automation runs every day at 6am, and sends me a email to tell me it has run along with key summary statistics. 
 
 Key Metrics Tracked
 
@@ -39,3 +39,10 @@ The automation becomes more valuable as it collects more data. During the initia
 Next steps
 
 Currently, the automation tracks only the Lucid Air. The next step is to add support for the Lucid Gravity while maintaining a separate dataset and dashboard. Since the two models target different segments of the market, combining their dashboards could obscure trends that are vehicle specific. 
+
+Tech Stack
+-n8n
+
+-Google Sheets
+
+-Lucid Inventory API
