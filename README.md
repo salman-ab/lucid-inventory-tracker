@@ -34,7 +34,7 @@ Key Metrics Tracked
 
 Limitations
 
-The automation becomes more valuable as it collects more data. During the initial weeks, there will be missing data and the metrics will be based on a limited sample size so the data should be interpreted with caution. Additionally, as more data is collected and analyzed, it may become clear that other metrics will also be useful and should be utilized. 
+The automation becomes more valuable as it collects more data. During the initial weeks, there will be missing data and the metrics will be based on a limited sample size so the data should be interpreted with caution. Additionally, as more data is collected and analyzed, it may become clear that other metrics will also be useful and should be utilized. Lastly, it only accounts for vehicles in inventory and can not account for custom orders. 
 
 Next steps
 
