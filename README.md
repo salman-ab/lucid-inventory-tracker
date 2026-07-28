@@ -16,7 +16,6 @@ The automation runs everyday at 6am, and sends me a email to tell me it has ran 
 Key Metrics Tracked
 
 -Total in Inventory
-
 -New Vehicles
 
 -Disappeared/Sold Vehicles
