@@ -21,6 +21,8 @@ Key Metrics Tracked
 
 -Disappeared/Sold Vehicles
 
+-Revenue Last Day, Week, 90 days, Year
+
 -Sold Last 7 days, Month, 90 days, Year
 
 -New Inventory Last 7 days, Month, 90 days, Year
