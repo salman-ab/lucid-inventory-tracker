@@ -1,0 +1,826 @@
+{
+  "name": "Lucid Air Inventory Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "136c5873-6e17-47fe-a308-fb1166652c81",
+      "name": "Every day at 6am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://buynow.lucidmotors.com/api/v4/en_us/store/inventory/vehicles",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "long",
+              "value": "-118.24400"
+            },
+            {
+              "name": "lat",
+              "value": "34.05440"
+            },
+            {
+              "name": "type",
+              "value": "new"
+            },
+            {
+              "name": "modelVariant",
+              "value": "PURE,AT,GT"
+            },
+            {
+              "name": "modelYear",
+              "value": "2025,2026"
+            },
+            {
+              "name": "sortType",
+              "value": "lease"
+            },
+            {
+              "name": "sortOrder",
+              "value": "asc"
+            },
+            {
+              "name": "distance",
+              "value": "6000"
+            },
+            {
+              "name": "zipState",
+              "value": "CA"
+            },
+            {
+              "name": "zipCountry",
+              "value": "US"
+            },
+            {
+              "name": "requestedVehiclesNum",
+              "value": "200"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "6f662971-dbfc-4e38-87ea-80f6d14fc88f",
+      "name": "Fetch Lucid Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read every input item and collect all vehicles across them.\nconst vehicles = [];\nfor (const item of $input.all()) {\n  const resp = item.json || {};\n  if (Array.isArray(resp.data)) {\n    for (const v of resp.data) vehicles.push(v);\n  }\n}\n\n// One consistent snapshot timestamp for the whole run.\nconst now = $now.toFormat('yyyy-MM-dd HH:mm:ss');\n\nfunction techName(v, field) {\n  const obj = v ? v[field] : null;\n  if (obj && typeof obj === 'object') {\n    return obj.technicalName != null ? obj.technicalName : '';\n  }\n  return '';\n}\n\nreturn vehicles.map((v) => {\n  const price = v.price || {};\n  const address = v.address || {};\n  return {\n    json: {\n      'VIN': v.VIN != null ? v.VIN : '',\n      'Model Year': v.modelYear != null ? v.modelYear : '',\n      'Availability': v.availability != null ? v.availability : '',\n      'In Transit': v.isInTransit != null ? v.isInTransit : '',\n      'At Studio': v.isAtStudio != null ? v.isAtStudio : '',\n      'At Hub': v.isAtHub != null ? v.isAtHub : '',\n      'Title Status': v.titleStatus != null ? v.titleStatus : '',\n      'Category': v.category != null ? v.category : '',\n      'Sales Status': v.salesStatus != null ? v.salesStatus : '',\n      'Model': techName(v, 'model'),\n      'Color': techName(v, 'color'),\n      'Interior': techName(v, 'interior'),\n      'Wheels': techName(v, 'wheels'),\n      'Roof': techName(v, 'roof'),\n      'Look/Trim': techName(v, 'look'),\n      'Seating': techName(v, 'seating'),\n      'Packages': techName(v, 'packages'),\n      'Driver Assistance': techName(v, 'driverAssistance'),\n      'Sound System': techName(v, 'soundSystem'),\n      'Price': price.value != null ? price.value : '',\n      'Greater Area': address.greaterArea != null ? address.greaterArea : '',\n      'State': address.state != null ? address.state : '',\n      'Image URL': v.imageURL != null ? v.imageURL : '',\n      'Snapshot Time': now,\n    },\n  };\n});"
+      },
+      "id": "460a7007-9ae3-4ac3-aa06-670c669b3082",
+      "name": "Flatten Vehicles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        288
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY",
+          "cachedResultName": "Lucid Air Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c682f219-4d53-4051-85cc-6cddacbd368f",
+      "name": "Append to History",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tOTbaJRfek6MLE47",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY",
+          "cachedResultName": "Lucid Air Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "b3308ccf-cb0d-4c37-b58c-73301e1c23fb",
+      "name": "Read Full History",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        96
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tOTbaJRfek6MLE47",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Full History rows come in as this node's input; current snapshot comes from Flatten.\nconst historyRows = $input.all().map(i => i.json).filter(r => r && r.VIN);\nconst currentRows = $('Flatten Vehicles').all().map(i => i.json).filter(r => r && r.VIN);\n\nconst DAY = 24 * 60 * 60 * 1000;\n\n// Tolerant timestamp parser (Google Sheets may re-render with non-padded hours).\nfunction toEpoch(ts) {\n  const s = String(ts == null ? '' : ts).trim();\n  const m = s.match(/(\\d{4})-(\\d{1,2})-(\\d{1,2})[ T](\\d{1,2}):(\\d{1,2})(?::(\\d{1,2}))?/);\n  if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)).getTime();\n  const d = new Date(s).getTime();\n  return isNaN(d) ? null : d;\n}\nfunction esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }\nfunction num(x) { const n = Number(String(x == null ? '' : x).replace(/[^0-9.\\-]/g, '')); return isFinite(n) ? n : null; }\nfunction sum(a) { let t = 0; for (const x of a) t += x; return t; }\nfunction round(n, d) { const f = Math.pow(10, d == null ? 2 : d); return Math.round(n * f) / f; }\nfunction pct(n, d) { return d ? round((n / d) * 100, 1) : 0; }\nfunction median(arr) { if (!arr.length) return 0; const a = arr.slice().sort((x, y) => x - y); const mid = Math.floor(a.length / 2); return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2; }\nfunction money(n) { return (n === '' || n == null) ? '' : '$' + Number(n).toLocaleString('en-US'); }\nfunction isTrue(x) { return x === true || String(x).toLowerCase() === 'true'; }\nfunction trimOf(model) { const m = String(model || ''); if (/grand touring/i.test(m)) return 'Grand Touring'; if (/touring/i.test(m)) return 'Touring'; if (/pure/i.test(m)) return 'Pure'; return m || 'Other'; }\n\nconst currentSnapshotTime = currentRows.length ? String(currentRows[0]['Snapshot Time'] || '') : '';\nconst currentEpoch = toEpoch(currentSnapshotTime);\n\n// Lifecycle maps keyed by epoch so timestamp formatting differences don't matter.\nconst byEpoch = {};        // epoch -> { vin: true }\nconst priceByEpoch = {};   // epoch -> { vin: price }\nconst vinFirst = {};       // vin -> earliest epoch\nconst vinLast = {};        // vin -> latest epoch\nconst vinLastRow = {};     // vin -> row at latest epoch\n\nfunction observe(vin, epoch, row) {\n  if (!vin || epoch == null) return;\n  if (!byEpoch[epoch]) byEpoch[epoch] = {};\n  byEpoch[epoch][vin] = true;\n  if (!priceByEpoch[epoch]) priceByEpoch[epoch] = {};\n  const p = num(row && row.Price);\n  if (p != null) priceByEpoch[epoch][vin] = p;\n  if (vinFirst[vin] == null || epoch < vinFirst[vin]) vinFirst[vin] = epoch;\n  if (vinLast[vin] == null || epoch >= vinLast[vin]) { vinLast[vin] = epoch; vinLastRow[vin] = row; }\n}\n\nfor (const r of historyRows) observe(String(r.VIN), toEpoch(r['Snapshot Time']), r);\n// Overlay today's snapshot so metrics are correct even if the History read lags one run.\nfor (const r of currentRows) observe(String(r.VIN), currentEpoch, r);\n\n// Current inventory = today's VINs.\nconst currentSet = {};\nconst currentByVin = {};\nfor (const r of currentRows) { currentSet[String(r.VIN)] = true; currentByVin[String(r.VIN)] = r; }\n\n// Previous snapshot = latest distinct epoch strictly before today's snapshot.\nconst epochs = Object.keys(byEpoch).map(Number).sort((a, b) => a - b);\nlet previous = null;\nfor (const e of epochs) { if (currentEpoch == null || e < currentEpoch) previous = e; }\nconst prevSet = previous != null ? byEpoch[previous] : {};\n\nconst currentVins = Object.keys(currentSet);\nconst newVins = currentVins.filter(v => !prevSet[v]);\nconst goneVins = previous != null ? Object.keys(prevSet).filter(v => !currentSet[v]) : [];\n\nconst nowEpoch = currentEpoch != null ? currentEpoch : Date.now();\nconst totalInInventory = currentVins.length;\n\n// ----- New inventory (gross additions) by window -----\nconst firstAll = Object.keys(vinFirst);\nfunction newWithin(days) { return firstAll.filter(v => (nowEpoch - vinFirst[v]) <= days * DAY).length; }\nconst newLast7 = newWithin(7);\nconst newLast90 = newWithin(90);\nconst newLast365 = newWithin(365);\n\n// ----- Sold / removed by window -----\nconst goneAll = Object.keys(vinLast).filter(v => !currentSet[v]);\nfunction soldWithin(days) { return goneAll.filter(v => (nowEpoch - vinLast[v]) <= days * DAY).length; }\nfunction soldBetween(d1, d2) { return goneAll.filter(v => { const age = nowEpoch - vinLast[v]; return age > d1 * DAY && age <= d2 * DAY; }).length; }\nconst soldLast7 = soldWithin(7);\nconst soldLast90 = soldWithin(90);\nconst soldLast365 = soldWithin(365);\nconst avgSoldPerWeek = round(soldLast365 / 52, 2);\n\n// ----- Revenue (sum of last-known listing price of sold/removed cars) -----\nfunction soldPrice(v) { const row = vinLastRow[v] || {}; const p = num(row.Price); return p == null ? 0 : p; }\n// Revenue for cars sold since the last run (\"today's\" revenue).\nconst revenuePerDay = sum(goneVins.map(soldPrice));\n\n// Avg days a sold car stayed available.\nlet totalDays = 0, cnt = 0;\nfor (const v of goneAll) { const d = (vinLast[v] - vinFirst[v]) / DAY; if (isFinite(d) && d >= 0) { totalDays += d; cnt++; } }\nconst avgDaysAvailable = cnt ? round(totalDays / cnt, 1) : 0;\n\n// ----- Inventory that existed at a given moment -----\nfunction invAtEpoch(e) { let c = 0; for (const v of firstAll) { if (vinFirst[v] <= e && vinLast[v] >= e) c++; } return c; }\n\n// ----- Sell-through rate = sold / (inventory at window start + additions in window) -----\nfunction sellThrough(days) { const start = nowEpoch - days * DAY; const denom = invAtEpoch(start) + newWithin(days); return pct(soldWithin(days), denom); }\nconst sellThrough7 = sellThrough(7);\nconst sellThrough90 = sellThrough(90);\nconst sellThrough365 = sellThrough(365);\n\n// ----- Weeks of supply = current inventory / avg weekly sales -----\nconst weeksOfSupply = avgSoldPerWeek ? round(totalInInventory / avgSoldPerWeek, 1) : '';\n\n// ----- Aging of current inventory -----\nconst currentAges = currentVins.map(v => (nowEpoch - vinFirst[v]) / DAY);\nconst medianDaysOnLot = round(median(currentAges), 1);\nfunction agedOver(d) { return currentAges.filter(a => a > d).length; }\nconst pctAged30 = pct(agedOver(30), totalInInventory);\nconst pctAged60 = pct(agedOver(60), totalInInventory);\nconst pctAged90 = pct(agedOver(90), totalInInventory);\n\n// ----- Pricing -----\nconst currentPrices = currentRows.map(r => num(r.Price)).filter(x => x != null);\nconst avgPrice = currentPrices.length ? round(sum(currentPrices) / currentPrices.length, 0) : 0;\nconst medianPrice = currentPrices.length ? round(median(currentPrices), 0) : 0;\n\n// ----- Per-trim stats -----\nconst byTrim = {};\nfunction ensureTrim(t) { if (!byTrim[t]) byTrim[t] = { invCount: 0, priceSum: 0, priceN: 0, soldCount: 0, daysSum: 0, daysN: 0 }; return byTrim[t]; }\nfor (const r of currentRows) { const o = ensureTrim(trimOf(r.Model)); o.invCount++; const p = num(r.Price); if (p != null) { o.priceSum += p; o.priceN++; } }\nfor (const v of goneAll) { const row = vinLastRow[v] || {}; const o = ensureTrim(trimOf(row.Model)); o.soldCount++; const d = (vinLast[v] - vinFirst[v]) / DAY; if (isFinite(d) && d >= 0) { o.daysSum += d; o.daysN++; } }\nfunction trimAvgPrice(t) { const o = byTrim[t]; return o && o.priceN ? round(o.priceSum / o.priceN, 0) : 0; }\nfunction trimInvShare(t) { const o = byTrim[t]; return o ? pct(o.invCount, totalInInventory) : 0; }\n\n// ----- Model-year mix (current inventory) -----\nconst myCount = {};\nfor (const r of currentRows) { const y = String(r['Model Year'] || '').trim() || 'Unknown'; myCount[y] = (myCount[y] || 0) + 1; }\nconst invShareMY2025 = pct(myCount['2025'] || 0, totalInInventory);\nconst invShareMY2026 = pct(myCount['2026'] || 0, totalInInventory);\n\n// ----- Price cuts since previous snapshot -----\nconst curPrice = priceByEpoch[currentEpoch] || {};\nconst prevPrice = previous != null ? (priceByEpoch[previous] || {}) : {};\nconst priceCuts = [];\nfor (const v of Object.keys(curPrice)) { if (prevPrice[v] != null) { const diff = curPrice[v] - prevPrice[v]; if (diff < 0) priceCuts.push({ vin: v, oldP: prevPrice[v], newP: curPrice[v], cut: -diff }); } }\npriceCuts.sort((a, b) => b.cut - a.cut);\nconst priceCutsCount = priceCuts.length;\nconst avgPriceCut = priceCutsCount ? round(sum(priceCuts.map(p => p.cut)) / priceCutsCount, 0) : 0;\n\n// ----- Regional breakdown -----\nconst byState = {};\nfunction ensureState(s) { if (!byState[s]) byState[s] = { inv: 0, sold90: 0 }; return byState[s]; }\nfor (const r of currentRows) { ensureState(String(r.State || '').trim() || 'Unknown').inv++; }\nfor (const v of goneAll) { if ((nowEpoch - vinLast[v]) <= 90 * DAY) { const row = vinLastRow[v] || {}; ensureState(String(row.State || '').trim() || 'Unknown').sold90++; } }\n\n// ----- Trend (WoW / MoM) -----\nconst inv7 = invAtEpoch(nowEpoch - 7 * DAY);\nconst inv30 = invAtEpoch(nowEpoch - 30 * DAY);\nconst invWoW = inv7 ? pct(totalInInventory - inv7, inv7) : 0;\nconst invMoM = inv30 ? pct(totalInInventory - inv30, inv30) : 0;\nconst soldPrev7 = soldBetween(7, 14);\nconst salesWoW = soldPrev7 ? pct(soldLast7 - soldPrev7, soldPrev7) : 0;\n\n// ----- Supply pipeline -----\nconst inTransitCount = currentRows.filter(r => isTrue(r['In Transit'])).length;\nconst atStudioCount = currentRows.filter(r => isTrue(r['At Studio'])).length;\nconst transitStudioRatio = atStudioCount ? round(inTransitCount / atStudioCount, 2) : '';\n\n// ===== Build email body =====\nconst dateLabel = currentSnapshotTime.slice(0, 10);\nlet html = '';\nhtml += '<h2>Lucid Inventory Daily Summary</h2>';\nhtml += '<p>Snapshot: ' + esc(currentSnapshotTime) + '</p>';\n\nhtml += '<h3>Headline</h3><ul>';\nhtml += '<li>Total in inventory: ' + totalInInventory + '</li>';\nhtml += '<li>New since last run: ' + newVins.length + '</li>';\nhtml += '<li>Gone since last run (likely sold/removed): ' + goneVins.length + '</li>';\nhtml += '<li>Weeks of supply: ' + weeksOfSupply + '</li>';\nhtml += '</ul>';\n\nhtml += '<h3>New inventory added</h3><ul>';\nhtml += '<li>Past week: ' + newLast7 + '</li><li>Past quarter: ' + newLast90 + '</li><li>Past year: ' + newLast365 + '</li>';\nhtml += '</ul>';\n\nhtml += '<h3>Cars sold / removed</h3><ul>';\nhtml += '<li>Past week: ' + soldLast7 + '</li><li>Past quarter: ' + soldLast90 + '</li><li>Past year: ' + soldLast365 + '</li>';\nhtml += '<li>Avg sold per week (last 12 months): ' + avgSoldPerWeek + '</li>';\nhtml += '<li>Avg days a car stays available: ' + avgDaysAvailable + '</li>';\nhtml += '</ul>';\n\nhtml += '<h3>Revenue (sold / removed cars)</h3><ul>';\nhtml += '<li>Per day (sold since last run): ' + money(revenuePerDay) + '</li>';\nhtml += '</ul>';\n\nhtml += '<h3>Sell-through rate</h3><ul>';\nhtml += '<li>Past week: ' + sellThrough7 + '%</li><li>Past quarter: ' + sellThrough90 + '%</li><li>Past year: ' + sellThrough365 + '%</li>';\nhtml += '</ul>';\n\nhtml += '<h3>Inventory aging (current stock)</h3><ul>';\nhtml += '<li>Median days on lot: ' + medianDaysOnLot + '</li>';\nhtml += '<li>Aged over 30 days: ' + pctAged30 + '%</li><li>Aged over 60 days: ' + pctAged60 + '%</li><li>Aged over 90 days: ' + pctAged90 + '%</li>';\nhtml += '</ul>';\n\nhtml += '<h3>Pricing</h3><ul>';\nhtml += '<li>Average listing price: ' + money(avgPrice) + '</li><li>Median listing price: ' + money(medianPrice) + '</li>';\nhtml += '<li>Price cuts since last run: ' + priceCutsCount + (priceCutsCount ? ' (avg ' + money(avgPriceCut) + ')' : '') + '</li>';\nhtml += '</ul>';\n\nhtml += '<h3>Trend</h3><ul>';\nhtml += '<li>Inventory WoW: ' + invWoW + '%</li><li>Inventory MoM: ' + invMoM + '%</li><li>Sales WoW: ' + salesWoW + '%</li>';\nhtml += '<li>In transit: ' + inTransitCount + ' | At studio: ' + atStudioCount + ' | Ratio: ' + transitStudioRatio + '</li>';\nhtml += '</ul>';\n\n// By-trim table.\nhtml += '<h3>By trim</h3>';\nlet trimHtml = '<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\"><tr><th>Trim</th><th>In inventory</th><th>Inv share</th><th>Avg price</th><th>Sold (all-time)</th><th>Avg days on lot</th></tr>';\nconst trimKeys = Object.keys(byTrim).sort((a, b) => byTrim[b].invCount - byTrim[a].invCount);\nfor (const t of trimKeys) { const o = byTrim[t]; const avgDays = o.daysN ? round(o.daysSum / o.daysN, 1) : ''; trimHtml += '<tr><td>' + esc(t) + '</td><td>' + o.invCount + '</td><td>' + pct(o.invCount, totalInInventory) + '%</td><td>' + money(o.priceN ? round(o.priceSum / o.priceN, 0) : '') + '</td><td>' + o.soldCount + '</td><td>' + avgDays + '</td></tr>'; }\ntrimHtml += '</table>';\nhtml += trimHtml;\n\n// Fastest / slowest moving trim.\nconst withDays = Object.keys(byTrim).filter(t => byTrim[t].daysN).map(t => ({ t: t, d: byTrim[t].daysSum / byTrim[t].daysN })).sort((a, b) => a.d - b.d);\nif (withDays.length) { html += '<p>Fastest-moving trim: ' + esc(withDays[0].t) + ' (' + round(withDays[0].d, 1) + ' days). Slowest: ' + esc(withDays[withDays.length - 1].t) + ' (' + round(withDays[withDays.length - 1].d, 1) + ' days).</p>'; }\n\n// Model-year mix.\nhtml += '<h3>Model-year mix (current)</h3><ul>';\nconst myKeys = Object.keys(myCount).sort();\nfor (const y of myKeys) html += '<li>' + esc(y) + ': ' + myCount[y] + ' (' + pct(myCount[y], totalInInventory) + '%)</li>';\nhtml += '</ul>';\n\n// Regional table.\nhtml += '<h3>By state</h3>';\nlet stateHtml = '<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\"><tr><th>State</th><th>In inventory</th><th>Sold last 90d</th></tr>';\nconst stKeys = Object.keys(byState).sort((a, b) => byState[b].inv - byState[a].inv);\nfor (const s of stKeys) { const o = byState[s]; stateHtml += '<tr><td>' + esc(s) + '</td><td>' + o.inv + '</td><td>' + o.sold90 + '</td></tr>'; }\nstateHtml += '</table>';\nhtml += stateHtml;\n\n// Price cuts table.\nhtml += '<h3>Price cuts since last run (' + priceCutsCount + ')</h3>';\nif (priceCutsCount) {\n  let cutHtml = '<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\"><tr><th>VIN</th><th>Model</th><th>Old price</th><th>New price</th><th>Cut</th></tr>';\n  for (const p of priceCuts) { const row = currentByVin[p.vin] || {}; cutHtml += '<tr><td>' + esc(p.vin) + '</td><td>' + esc(row.Model) + '</td><td>' + money(p.oldP) + '</td><td>' + money(p.newP) + '</td><td>' + money(p.cut) + '</td></tr>'; }\n  cutHtml += '</table>';\n  html += cutHtml;\n} else { html += '<p>None.</p>'; }\n\n// New / gone vehicle tables.\nfunction rowHtml(r) { return '<tr><td>' + esc(r.VIN) + '</td><td>' + esc(r.Model) + '</td><td>' + esc(r.Color) + '</td><td>' + money(num(r.Price)) + '</td><td>' + esc(r['Greater Area']) + '</td><td>' + esc(r.State) + '</td></tr>'; }\nfunction table(vins, source) { if (!vins.length) return '<p>None.</p>'; let h = '<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\"><tr><th>VIN</th><th>Model</th><th>Color</th><th>Price</th><th>Area</th><th>State</th></tr>'; for (const v of vins) h += rowHtml(source[v] || { VIN: v }); h += '</table>'; return h; }\nhtml += '<h3>New vehicles (' + newVins.length + ')</h3>' + table(newVins, currentByVin);\nhtml += '<h3>Gone vehicles (' + goneVins.length + ')</h3>' + table(goneVins, vinLastRow);\n\nif (!previous) html += '<p><em>Windowed and trend metrics are limited by how much history has accumulated; they become fully meaningful once the tracker has run for the corresponding period.</em></p>';\n\nconst subject = 'Lucid Inventory ' + dateLabel + ' - ' + newVins.length + ' new, ' + goneVins.length + ' gone';\n\nreturn [{\n  json: {\n    'Snapshot Time': currentSnapshotTime,\n    'Total In Inventory': totalInInventory,\n    'New Vehicles': newVins.length,\n    'Disappeared Vehicles': goneVins.length,\n    'New Last 7 Days': newLast7,\n    'New Last 90 Days': newLast90,\n    'New Last 365 Days': newLast365,\n    'Sold Last 7 Days': soldLast7,\n    'Sold Last 90 Days': soldLast90,\n    'Sold Last 365 Days': soldLast365,\n    'Revenue Per Day': revenuePerDay,\n    'Avg Sold Per Week (1yr)': avgSoldPerWeek,\n    'Avg Days Available': avgDaysAvailable,\n    'Sell-Through 7d %': sellThrough7,\n    'Sell-Through 90d %': sellThrough90,\n    'Sell-Through 365d %': sellThrough365,\n    'Weeks Of Supply': weeksOfSupply,\n    'Median Days On Lot': medianDaysOnLot,\n    'Pct Aged 30+': pctAged30,\n    'Pct Aged 60+': pctAged60,\n    'Pct Aged 90+': pctAged90,\n    'Avg Price': avgPrice,\n    'Median Price': medianPrice,\n    'Avg Price Pure': trimAvgPrice('Pure'),\n    'Avg Price Touring': trimAvgPrice('Touring'),\n    'Avg Price GT': trimAvgPrice('Grand Touring'),\n    'Inv Share Pure %': trimInvShare('Pure'),\n    'Inv Share Touring %': trimInvShare('Touring'),\n    'Inv Share GT %': trimInvShare('Grand Touring'),\n    'Inv Share MY2025 %': invShareMY2025,\n    'Inv Share MY2026 %': invShareMY2026,\n    'Price Cuts': priceCutsCount,\n    'Avg Price Cut': avgPriceCut,\n    'Inv WoW %': invWoW,\n    'Inv MoM %': invMoM,\n    'Sales WoW %': salesWoW,\n    'In Transit Count': inTransitCount,\n    'At Studio Count': atStudioCount,\n    'In Transit/Studio Ratio': transitStudioRatio,\n    emailSubject: subject,\n    emailHtml: html,\n  },\n}];"
+      },
+      "id": "5548b546-06e9-497c-ac65-05edd6b3a880",
+      "name": "Compute Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY",
+          "cachedResultName": "Lucid Air Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Dashboard"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Snapshot Time": "={{ $json[\"Snapshot Time\"] }}",
+            "Total In Inventory": "={{ $json[\"Total In Inventory\"] }}",
+            "New Vehicles": "={{ $json[\"New Vehicles\"] }}",
+            "Disappeared Vehicles": "={{ $json[\"Disappeared Vehicles\"] }}",
+            "New Last 7 Days": "={{ $json[\"New Last 7 Days\"] }}",
+            "New Last 90 Days": "={{ $json[\"New Last 90 Days\"] }}",
+            "New Last 365 Days": "={{ $json[\"New Last 365 Days\"] }}",
+            "Sold Last 7 Days": "={{ $json[\"Sold Last 7 Days\"] }}",
+            "Sold Last 90 Days": "={{ $json[\"Sold Last 90 Days\"] }}",
+            "Sold Last 365 Days": "={{ $json[\"Sold Last 365 Days\"] }}",
+            "Revenue Per Day": "={{ $json[\"Revenue Per Day\"] }}",
+            "Avg Sold Per Week (1yr)": "={{ $json[\"Avg Sold Per Week (1yr)\"] }}",
+            "Avg Days Available": "={{ $json[\"Avg Days Available\"] }}",
+            "Sell-Through 7d %": "={{ $json[\"Sell-Through 7d %\"] }}",
+            "Sell-Through 90d %": "={{ $json[\"Sell-Through 90d %\"] }}",
+            "Sell-Through 365d %": "={{ $json[\"Sell-Through 365d %\"] }}",
+            "Weeks Of Supply": "={{ $json[\"Weeks Of Supply\"] }}",
+            "Median Days On Lot": "={{ $json[\"Median Days On Lot\"] }}",
+            "Pct Aged 30+": "={{ $json[\"Pct Aged 30+\"] }}",
+            "Pct Aged 60+": "={{ $json[\"Pct Aged 60+\"] }}",
+            "Pct Aged 90+": "={{ $json[\"Pct Aged 90+\"] }}",
+            "Avg Price": "={{ $json[\"Avg Price\"] }}",
+            "Median Price": "={{ $json[\"Median Price\"] }}",
+            "Avg Price Pure": "={{ $json[\"Avg Price Pure\"] }}",
+            "Avg Price Touring": "={{ $json[\"Avg Price Touring\"] }}",
+            "Avg Price GT": "={{ $json[\"Avg Price GT\"] }}",
+            "Inv Share Pure %": "={{ $json[\"Inv Share Pure %\"] }}",
+            "Inv Share Touring %": "={{ $json[\"Inv Share Touring %\"] }}",
+            "Inv Share GT %": "={{ $json[\"Inv Share GT %\"] }}",
+            "Inv Share MY2025 %": "={{ $json[\"Inv Share MY2025 %\"] }}",
+            "Inv Share MY2026 %": "={{ $json[\"Inv Share MY2026 %\"] }}",
+            "Price Cuts": "={{ $json[\"Price Cuts\"] }}",
+            "Avg Price Cut": "={{ $json[\"Avg Price Cut\"] }}",
+            "Inv WoW %": "={{ $json[\"Inv WoW %\"] }}",
+            "Inv MoM %": "={{ $json[\"Inv MoM %\"] }}",
+            "Sales WoW %": "={{ $json[\"Sales WoW %\"] }}",
+            "In Transit Count": "={{ $json[\"In Transit Count\"] }}",
+            "At Studio Count": "={{ $json[\"At Studio Count\"] }}",
+            "In Transit/Studio Ratio": "={{ $json[\"In Transit/Studio Ratio\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Snapshot Time",
+              "displayName": "Snapshot Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Total In Inventory",
+              "displayName": "Total In Inventory",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "New Vehicles",
+              "displayName": "New Vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Disappeared Vehicles",
+              "displayName": "Disappeared Vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "New Last 7 Days",
+              "displayName": "New Last 7 Days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "New Last 90 Days",
+              "displayName": "New Last 90 Days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "New Last 365 Days",
+              "displayName": "New Last 365 Days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sold Last 7 Days",
+              "displayName": "Sold Last 7 Days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sold Last 90 Days",
+              "displayName": "Sold Last 90 Days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sold Last 365 Days",
+              "displayName": "Sold Last 365 Days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Revenue Per Day",
+              "displayName": "Revenue Per Day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Sold Per Week (1yr)",
+              "displayName": "Avg Sold Per Week (1yr)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Days Available",
+              "displayName": "Avg Days Available",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sell-Through 7d %",
+              "displayName": "Sell-Through 7d %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sell-Through 90d %",
+              "displayName": "Sell-Through 90d %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sell-Through 365d %",
+              "displayName": "Sell-Through 365d %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Weeks Of Supply",
+              "displayName": "Weeks Of Supply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Median Days On Lot",
+              "displayName": "Median Days On Lot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Pct Aged 30+",
+              "displayName": "Pct Aged 30+",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Pct Aged 60+",
+              "displayName": "Pct Aged 60+",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Pct Aged 90+",
+              "displayName": "Pct Aged 90+",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Price",
+              "displayName": "Avg Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Median Price",
+              "displayName": "Median Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Price Pure",
+              "displayName": "Avg Price Pure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Price Touring",
+              "displayName": "Avg Price Touring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Price GT",
+              "displayName": "Avg Price GT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv Share Pure %",
+              "displayName": "Inv Share Pure %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv Share Touring %",
+              "displayName": "Inv Share Touring %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv Share GT %",
+              "displayName": "Inv Share GT %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv Share MY2025 %",
+              "displayName": "Inv Share MY2025 %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv Share MY2026 %",
+              "displayName": "Inv Share MY2026 %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Price Cuts",
+              "displayName": "Price Cuts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Avg Price Cut",
+              "displayName": "Avg Price Cut",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv WoW %",
+              "displayName": "Inv WoW %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Inv MoM %",
+              "displayName": "Inv MoM %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Sales WoW %",
+              "displayName": "Sales WoW %",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "In Transit Count",
+              "displayName": "In Transit Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "At Studio Count",
+              "displayName": "At Studio Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "In Transit/Studio Ratio",
+              "displayName": "In Transit/Studio Ratio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "193c43de-7225-4572-a331-e6b79a885c0c",
+      "name": "Append Dashboard Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        16
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tOTbaJRfek6MLE47",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "salmanab@sas.upenn.edu",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "002f6672-a876-4ea9-9acd-a466063df6f8",
+      "name": "Send Summary Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        192
+      ],
+      "webhookId": "5b46381b-93e8-4047-a67f-9e9a98bf69f4",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ia1VUHN01JsdwMXC",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY",
+          "cachedResultName": "Lucid Air Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 410052668,
+          "mode": "list",
+          "cachedResultName": "Current Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit#gid=410052668"
+        }
+      },
+      "id": "8c450737-1800-470e-98a0-21a194c976c2",
+      "name": "Clear Current Inventory",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        288
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tOTbaJRfek6MLE47",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY",
+          "cachedResultName": "Lucid Air Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 410052668,
+          "mode": "list",
+          "cachedResultName": "Current Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nJ5gKhJjCQG-l1SjAzIJhdKpyAzEQ92UzUWeeTUHdiY/edit#gid=410052668"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "86f9d421-a175-403a-a4a9-ac6c4761118c",
+      "name": "Write Current Inventory",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        480
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tOTbaJRfek6MLE47",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every day at 6am": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lucid Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lucid Inventory": {
+      "main": [
+        [
+          {
+            "node": "Flatten Vehicles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Vehicles": {
+      "main": [
+        [
+          {
+            "node": "Append to History",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Clear Current Inventory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Write Current Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to History": {
+      "main": [
+        [
+          {
+            "node": "Read Full History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Full History": {
+      "main": [
+        [
+          {
+            "node": "Compute Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Metrics": {
+      "main": [
+        [
+          {
+            "node": "Send Summary Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Dashboard Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5a97ad1e-0193-4010-be02-187910fa290c",
+  "meta": {
+    "instanceId": "01fc8b08940b21ff6c0a3e6ba3a87a4931a3b1777c3abbc17f5a75524451688c"
+  },
+  "nodeGroups": [],
+  "id": "qmhMd38UnSa2aUP5",
+  "tags": []
+}
